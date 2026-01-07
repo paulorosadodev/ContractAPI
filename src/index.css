@@ -1,0 +1,138 @@
+@import "tailwindcss";
+
+@layer base {
+    :root {
+        /* Dracula (dark, programmer vibe) - Default */
+        --app-bg: #282a36;
+        --app-surface: #242635;
+        --app-surface-2: #2f3142;
+        --app-border: #3b3d53;
+        --app-fg: #f8f8f2;
+        --app-muted: #b4b4c2;
+        --app-accent: #bd93f9;
+        --app-danger: #ff5555;
+        --app-navbar-h: 52px;
+
+        /* Code Syntax Highlighting - Dark */
+        --code-bg: #282a36;
+        --code-keyword: #ff79c6;
+        --code-type: #8be9fd;
+        --code-string: #f1fa8c;
+        --code-property: #50fa7b;
+        --code-punctuation: #f8f8f2;
+        --code-comment: #6272a4;
+    }
+
+    /* Light Theme */
+    :root[data-theme="light"] {
+        /* GitHub-inspired light theme */
+        --app-bg: #ffffff;
+        --app-surface: #f6f8fa;
+        --app-surface-2: #eaeef2;
+        --app-border: #d0d7de;
+        --app-fg: #1f2328;
+        --app-muted: #656d76;
+        --app-accent: #8250df;
+        --app-danger: #cf222e;
+
+        /* Code Syntax Highlighting - Light */
+        --code-bg: #f6f8fa;
+        --code-keyword: #cf222e;
+        --code-type: #0550ae;
+        --code-string: #0a3069;
+        --code-property: #116329;
+        --code-punctuation: #24292f;
+        --code-comment: #6e7781;
+    }
+
+    html,
+    body,
+    #root {
+        height: 100%;
+    }
+
+    body {
+        background: var(--app-bg);
+        color: var(--app-fg);
+        font-family: "JetBrains Mono", monospace;
+    }
+
+    ::selection {
+        background: color-mix(in oklab, var(--app-accent) 35%, transparent);
+    }
+
+    /* Scrollbar personalizada */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--app-bg);
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--app-border);
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--app-muted);
+    }
+
+    ::-webkit-scrollbar-corner {
+        background: var(--app-bg);
+    }
+
+    /* Firefox */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--app-border) var(--app-bg);
+    }
+
+    /* Checkbox personalizada */
+    input[type="checkbox"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid var(--app-border);
+        border-radius: 4px;
+        background: var(--app-bg);
+        cursor: pointer;
+        position: relative;
+        transition: all 0.15s ease;
+    }
+
+    input[type="checkbox"]:hover:not(:disabled) {
+        border-color: var(--app-accent);
+    }
+
+    input[type="checkbox"]:checked {
+        background: var(--app-accent);
+        border-color: var(--app-accent);
+    }
+
+    input[type="checkbox"]:checked::after {
+        content: "";
+        position: absolute;
+        left: 4px;
+        top: 1px;
+        width: 4px;
+        height: 8px;
+        border: solid #fff;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+
+    input[type="checkbox"]:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    input[type="checkbox"]:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px color-mix(in oklab, var(--app-accent) 40%, transparent);
+    }
+}
