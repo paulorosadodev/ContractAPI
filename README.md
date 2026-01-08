@@ -14,16 +14,21 @@
 ## ✨ Funcionalidades
 
 ### 📦 Interfaces & Types
+
 Crie interfaces e types TypeScript visualmente, com suporte a:
+
 - Campos opcionais e obrigatórios
 - Arrays de qualquer tipo
 - Referências a outros objetos
 
 ### 📋 Enums
+
 Defina enums para status, categorias e valores fixos com validação automática de nomenclatura (UPPER_SNAKE_CASE).
 
 ### 🌐 Endpoints
+
 Configure endpoints REST completos com:
+
 - Métodos HTTP (GET, POST, PUT, PATCH, DELETE)
 - Path com parâmetros (`:id`, `:slug`)
 - Query parameters tipados
@@ -31,27 +36,37 @@ Configure endpoints REST completos com:
 - Descrição do endpoint
 
 ### 📁 Coleções
+
 Organize seus objetos e endpoints em coleções e subcoleções hierárquicas. Arraste e solte para reorganizar.
 
 ### 🛡️ Roles & Permissões
+
 Defina roles ordenadas por hierarquia e associe permissões mínimas a cada endpoint para documentar autorizações.
 
-### 🔄 Sincronização em Tempo Real
-Colabore com sua equipe em tempo real via WebSocket. Todas as alterações são sincronizadas instantaneamente entre todos os clientes conectados.
+### 🔄 Modos de Trabalho
+
+**Modo Local (padrão):** Trabalhe individualmente com seus dados salvos no localStorage do navegador. Ideal para rascunhos e projetos pessoais.
+
+**Modo Colaborativo:** Crie uma sessão e compartilhe o link com sua equipe. Todas as alterações são sincronizadas em tempo real via WebSocket entre todos os participantes.
 
 ### 📤 Export TypeScript
+
 Exporte interfaces, types e enums prontos para copiar e colar no seu código.
 
 ### 👁️ Preview JSON
+
 Visualize como seus objetos ficam em JSON com syntax highlighting.
 
-### 👥 Multi-usuário
-Veja quantos usuários estão conectados e trabalhando na mesma documentação.
+### 👥 Sessões Colaborativas
+
+Inicie uma sessão colaborativa e compartilhe o link com sua equipe. Cada sessão tem seu próprio espaço de dados isolado e sincronização em tempo real.
 
 ### 💾 Import/Export
+
 Exporte toda a documentação em JSON e importe em outro ambiente.
 
 ### 🌙 Tema Claro/Escuro
+
 Suporte a tema Dracula (dark) e tema claro inspirado no GitHub.
 
 ## 🏗️ Arquitetura
@@ -61,16 +76,18 @@ contract-api/
 ├── server/                    # Backend Node.js
 │   ├── index.js              # Servidor Express + WebSocket
 │   ├── services/
-│   │   └── dataService.js    # Lógica de negócio (CRUD)
+│   │   ├── dataService.js    # Lógica de negócio (CRUD global)
+│   │   └── sessionService.js # Gerenciamento de sessões
 │   ├── websocket/
-│   │   └── dataHandler.js    # Handlers de mensagens WebSocket
+│   │   ├── dataHandler.js    # Handlers legados (sem sessão)
+│   │   └── sessionHandler.js # Handlers para sessões colaborativas
 │   ├── types/
 │   │   └── data.js           # Tipos e estrutura padrão
 │   ├── utils/
 │   │   ├── fileSystem.js     # Persistência em JSON
 │   │   └── string.js         # Utilitários de string
 │   └── data/
-│       └── data.json         # Dados persistidos
+│       └── data.json         # Dados persistidos (modo legado)
 │
 ├── src/                       # Frontend React
 │   ├── App.tsx               # Roteamento Landing/Home
@@ -79,7 +96,12 @@ contract-api/
 │   │   └── HomePage.tsx      # Aplicação principal
 │   ├── features/folders/
 │   │   ├── components/       # Componentes da feature
-│   │   ├── hooks/            # useFoldersWs, useSidebarResize
+│   │   ├── context/
+│   │   │   └── SessionContext.tsx # Gerenciamento de sessões
+│   │   ├── hooks/
+│   │   │   ├── useFoldersWs.ts    # Hook WebSocket (colaborativo)
+│   │   │   ├── useLocalData.ts    # Hook localStorage (local)
+│   │   │   └── useSidebarResize.ts
 │   │   ├── model/            # Tipos TypeScript
 │   │   └── utils/            # Utilitários
 │   ├── shared/
@@ -91,39 +113,74 @@ contract-api/
 └── index.html                # Entry point
 ```
 
-## 🔌 Como Funciona o WebSocket
+## 🔌 Modos de Operação
 
-O ContractAPI usa WebSocket para sincronização em tempo real entre múltiplos clientes.
+O ContractAPI oferece dois modos de trabalho que se adequam a diferentes necessidades:
+
+### 🏠 Modo Local
+
+Por padrão, cada usuário trabalha individualmente com seus próprios dados salvos no **localStorage** do navegador. 
+
+- ✅ Não requer conexão de rede
+- ✅ Dados privados e locais
+- ✅ Ideal para rascunhos e projetos pessoais
+- ✅ Import/Export para compartilhar manualmente
+
+### 👥 Modo Colaborativo
+
+Clique no botão **"Colaborar"** para criar uma sessão e compartilhar o link com sua equipe.
+
+- ✅ Sincronização em tempo real via WebSocket
+- ✅ Múltiplos usuários trabalhando simultaneamente
+- ✅ Cada sessão tem dados isolados na memória do servidor
+- ✅ Sessões expiram após 30 minutos de inatividade
+- ✅ ID único de 8 caracteres na URL
+
+**Fluxo de Colaboração:**
+
+```
+1. Usuário A clica em "Colaborar" → cria sessão (ex: abc12345)
+2. URL atualiza: http://localhost:3001?session=abc12345
+3. Usuário A copia e compartilha o link
+4. Usuários B, C, D abrem o link → entram na mesma sessão
+5. Todos veem as alterações em tempo real
+6. Qualquer um pode sair clicando em "Sair da Sessão"
+7. Quando todos saem, a sessão expira em 30 minutos
+```
+
+## 🔌 Como Funciona o WebSocket (Modo Colaborativo)
 
 ### Fluxo de Comunicação
 
 ```
-┌─────────────┐     WebSocket      ┌─────────────┐
-│   Cliente   │ ◄────────────────► │   Servidor  │
-│   (React)   │                    │   (Node.js) │
-└─────────────┘                    └─────────────┘
-       │                                  │
-       │  1. Conecta via ws://host/ws     │
-       │ ──────────────────────────────►  │
-       │                                  │
-       │  2. Recebe INIT com estado       │
-       │ ◄──────────────────────────────  │
-       │                                  │
-       │  3. Envia ação (CREATE, UPDATE)  │
-       │ ──────────────────────────────►  │
-       │                                  │
-       │  4. Servidor processa e persiste │
-       │                                  │
-       │  5. Broadcast DATA_UPDATE        │
-       │ ◄──────────────────────────────  │
-       │                                  │
-       │  6. Todos clientes atualizam     │
-       │                                  │
+┌─────────────┐     WebSocket      ┌─────────────────┐
+│  Cliente A  │ ◄────────────────► │    Servidor     │
+│   (React)   │  ?session=abc123   │    (Node.js)    │
+└─────────────┘                    └─────────────────┘
+       │                                    │
+       │                                    ▼
+       │                           ┌────────────────┐
+       │                           │  sessionService │
+       │                           │   sessions = {  │
+       │                           │    abc123: {    │
+┌─────────────┐                    │      clients,   │
+│  Cliente B  │                    │      dataStore  │
+│   (React)   │ ◄──────────────────│    }            │
+└─────────────┘  ?session=abc123   │   }             │
+                                    └────────────────┘
+
+1. Cliente conecta com ?session=abc123
+2. Servidor busca/cria sessão abc123 no sessionService
+3. Envia INIT com dataStore da sessão
+4. Cliente envia ação (CREATE, UPDATE, etc)
+5. Servidor atualiza dataStore da sessão
+6. Broadcast DATA_UPDATE para todos clientes da sessão
 ```
 
 ### Tipos de Mensagens
 
 **Cliente → Servidor:**
+
 - `CREATE_COLLECTION` / `RENAME_COLLECTION` / `DELETE_COLLECTION` / `MOVE_COLLECTION`
 - `CREATE_OBJECT` / `UPDATE_OBJECT` / `DELETE_OBJECT` / `MOVE_OBJECT`
 - `CREATE_ENDPOINT` / `UPDATE_ENDPOINT` / `DELETE_ENDPOINT` / `MOVE_ENDPOINT`
@@ -131,6 +188,7 @@ O ContractAPI usa WebSocket para sincronização em tempo real entre múltiplos 
 - `IMPORT_DATA`
 
 **Servidor → Cliente:**
+
 - `INIT` - Estado inicial ao conectar
 - `DATA_UPDATE` - Atualização após qualquer mudança
 - `CLIENT_COUNT` - Número de clientes conectados
@@ -138,11 +196,14 @@ O ContractAPI usa WebSocket para sincronização em tempo real entre múltiplos 
 
 ### Persistência
 
-Os dados são salvos em `server/data/data.json` de forma atômica (escrita em arquivo temporário + rename) para evitar corrupção.
+**Modo Local:** Os dados são salvos automaticamente no `localStorage` do navegador sempre que há alterações.
+
+**Modo Colaborativo:** Os dados ficam em memória no servidor durante a sessão ativa. Para persistir, use Export/Import ou integre um banco de dados.
 
 ## 🚀 Como Rodar
 
 ### Pré-requisitos
+
 - [Bun](https://bun.sh/) (recomendado) ou Node.js 18+
 
 ### Instalação
@@ -164,6 +225,7 @@ bun run dev
 ```
 
 O servidor estará disponível em:
+
 - **Frontend:** http://localhost:5173
 - **Backend/WebSocket:** http://localhost:3001
 
@@ -189,19 +251,20 @@ http://192.168.x.x:3001
 
 ## 📜 Scripts Disponíveis
 
-| Script | Descrição |
-|--------|-----------|
-| `bun run dev` | Inicia backend e frontend em paralelo |
-| `bun run server` | Inicia apenas o backend |
-| `bun run client` | Inicia apenas o frontend (Vite) |
-| `bun run build` | Build de produção |
-| `bun run start` | Inicia servidor de produção |
-| `bun run lint` | Executa ESLint |
-| `bun run format` | Formata código com Prettier |
+| Script           | Descrição                             |
+| ---------------- | ------------------------------------- |
+| `bun run dev`    | Inicia backend e frontend em paralelo |
+| `bun run server` | Inicia apenas o backend               |
+| `bun run client` | Inicia apenas o frontend (Vite)       |
+| `bun run build`  | Build de produção                     |
+| `bun run start`  | Inicia servidor de produção           |
+| `bun run lint`   | Executa ESLint                        |
+| `bun run format` | Formata código com Prettier           |
 
 ## 🛠️ Stack Tecnológica
 
 ### Frontend
+
 - **React 19** - UI library
 - **TypeScript** - Type safety
 - **Tailwind CSS 4** - Styling
@@ -210,11 +273,13 @@ http://192.168.x.x:3001
 - **Vite** - Build tool
 
 ### Backend
+
 - **Node.js** - Runtime
 - **Express** - HTTP server
 - **ws** - WebSocket library
 
 ### Fontes
+
 - **JetBrains Mono** - Monospace font
 
 ## 🎨 Temas
@@ -222,9 +287,11 @@ http://192.168.x.x:3001
 O ContractAPI suporta dois temas:
 
 ### Dracula (Dark) - Padrão
+
 Tema escuro com cores vibrantes, ideal para longas sessões de trabalho.
 
 ### GitHub (Light)
+
 Tema claro inspirado na interface do GitHub.
 
 O tema é persistido no localStorage e pode ser alternado pelo botão na navbar.

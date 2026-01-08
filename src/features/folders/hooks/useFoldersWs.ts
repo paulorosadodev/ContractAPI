@@ -14,12 +14,13 @@ function collectionExistsInTree(collections: CollectionNode[], id: string): bool
     return false;
 }
 
-function getWsUrl() {
+function getWsUrl(sessionId: string | null) {
     const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    return `${wsProtocol}//${window.location.host}/ws`;
+    const baseUrl = `${wsProtocol}//${window.location.host}/ws`;
+    return sessionId ? `${baseUrl}?session=${sessionId}` : baseUrl;
 }
 
-export function useFoldersWs() {
+export function useFoldersWs(sessionId: string | null = null) {
     const [tree, setTree] = useState<CollectionNode[]>([]);
     const [objects, setObjects] = useState<ObjectNode[]>([]);
     const [roles, setRoles] = useState<Role[]>([]);
@@ -51,8 +52,15 @@ export function useFoldersWs() {
         }
     }, [endpoints, selectedEndpointId]);
 
+    // Conecta ao WebSocket apenas quando há um sessionId
     useEffect(() => {
-        const ws = new WebSocket(getWsUrl());
+        // Se não há sessionId, não conecta
+        if (!sessionId) {
+            setIsLoading(false);
+            return;
+        }
+
+        const ws = new WebSocket(getWsUrl(sessionId));
         wsRef.current = ws;
 
         ws.onopen = () => setIsConnected(true);
@@ -75,12 +83,16 @@ export function useFoldersWs() {
         };
 
         ws.onerror = () => setIsConnected(false);
-        ws.onclose = () => setIsConnected(false);
+        ws.onclose = () => {
+            setIsConnected(false);
+            wsRef.current = null;
+        };
 
         return () => {
             if (ws.readyState === WebSocket.OPEN) ws.close();
+            wsRef.current = null;
         };
-    }, []);
+    }, [sessionId]);
 
     const send = useCallback((msg: ClientMessage) => {
         const ws = wsRef.current;

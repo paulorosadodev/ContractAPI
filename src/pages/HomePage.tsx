@@ -4,7 +4,7 @@ import { ObjectDetailView } from "../features/folders/components/ObjectDetailVie
 import { EndpointDetailView } from "../features/folders/components/EndpointDetailView";
 import { CollectionDetailView } from "../features/folders/components/CollectionDetailView";
 import Navbar from "../shared/components/Navbar";
-import { useFoldersWs } from "../features/folders/hooks/useFoldersWs";
+import { useSession } from "../features/folders/context/SessionContext";
 import { useSidebarResize } from "../features/folders/hooks/useSidebarResize";
 import { collectAllCollectionIds, getCollectionName, getCollectionPath } from "../features/folders/utils/collectionUtils";
 
@@ -13,8 +13,11 @@ interface HomePageProps {
 }
 
 export default function HomePage({ onBackToLanding }: HomePageProps) {
-    // WebSocket hook com todos os dados e operações
-    const { tree, objects, endpoints, roles, selectedCollectionId, selectedObjectId, selectedEndpointId, setSelectedCollectionId, setSelectedObjectId, setSelectedEndpointId, isConnected, isLoading, clientCount, createCollection, renameCollection, deleteCollection, moveCollection, createObject, updateObject, deleteObject, moveObject, importData, exportData, createRole, renameRole, deleteRole, reorderRoles, createEndpoint, updateEndpoint, deleteEndpoint, moveEndpoint } = useFoldersWs();
+    // Contexto de sessão
+    const { mode, sessionId, startCollaborativeSession, leaveSession, getShareableLink, data } = useSession();
+
+    // Dados do hook apropriado (local ou colaborativo)
+    const { tree, objects, endpoints, roles, selectedCollectionId, selectedObjectId, selectedEndpointId, setSelectedCollectionId, setSelectedObjectId, setSelectedEndpointId, isConnected, isLoading, clientCount, createCollection, renameCollection, deleteCollection, moveCollection, createObject, updateObject, deleteObject, moveObject, importData, exportData, createRole, renameRole, deleteRole, reorderRoles, createEndpoint, updateEndpoint, deleteEndpoint, moveEndpoint } = data;
 
     // Hook de resize da sidebar
     const { sidebarWidth, isResizing, sidebarRef, handleMouseDown } = useSidebarResize();
@@ -77,7 +80,7 @@ export default function HomePage({ onBackToLanding }: HomePageProps) {
 
     return (
         <div className="flex h-full flex-col">
-            <Navbar isConnected={isConnected} clientCount={clientCount} onImport={importData} onExport={exportData} onBackToLanding={onBackToLanding} />
+            <Navbar isConnected={isConnected} clientCount={clientCount} onImport={importData} onExport={exportData} onBackToLanding={onBackToLanding} sessionMode={mode} sessionId={sessionId} onStartSession={startCollaborativeSession} onLeaveSession={leaveSession} getShareableLink={getShareableLink} />
 
             <div className="flex flex-1 overflow-hidden flex-col lg:flex-row">
                 {/* Sidebar com FolderExplorer */}

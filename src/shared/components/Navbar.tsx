@@ -1,6 +1,8 @@
-import { useRef } from "react";
-import { Download, Upload, Users, Moon, Sun, Code2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { Download, Upload, Users, Moon, Sun, Code2, Share2, Copy, LogOut, Check } from "lucide-react";
 import { useTheme } from "../hooks/useTheme";
+
+type SessionMode = "local" | "collaborative";
 
 interface NavbarProps {
     isConnected?: boolean;
@@ -8,11 +10,18 @@ interface NavbarProps {
     onImport?: (data: any) => void;
     onExport?: () => any;
     onBackToLanding?: () => void;
+    // Props de sessão
+    sessionMode?: SessionMode;
+    sessionId?: string | null;
+    onStartSession?: () => void;
+    onLeaveSession?: () => void;
+    getShareableLink?: () => string | null;
 }
 
-export default function Navbar({ isConnected, clientCount, onImport, onExport, onBackToLanding }: NavbarProps) {
+export default function Navbar({ isConnected, clientCount, onImport, onExport, onBackToLanding, sessionMode = "local", sessionId, onStartSession, onLeaveSession, getShareableLink }: NavbarProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { theme, toggleTheme } = useTheme();
+    const [copied, setCopied] = useState(false);
 
     const handleExport = () => {
         if (!onExport) return;
@@ -42,44 +51,85 @@ export default function Navbar({ isConnected, clientCount, onImport, onExport, o
         e.target.value = "";
     };
 
+    const handleCopyLink = () => {
+        const link = getShareableLink?.();
+        if (link) {
+            navigator.clipboard.writeText(link);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
+    };
+
     return (
         <header className="h-(--app-navbar-h) border-b border-(--app-border) bg-(--app-surface)/70 backdrop-blur supports-backdrop-filter:bg-(--app-surface)/60" role="banner">
-            <div className="mx-auto flex h-full w-full items-center justify-between px-2 md:px-4">
-                <button type="button" onClick={onBackToLanding} className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm font-semibold tracking-wide text-(--app-fg) hover:opacity-80 transition-opacity cursor-pointer" title="Voltar para página inicial">
-                    <span className="inline-flex size-7 md:size-8 items-center justify-center rounded-md border border-(--app-border) bg-(--app-surface-2)">
-                        <Code2 className="size-3.5 md:size-4 text-(--app-accent)" />
-                    </span>
-                    <span>ContractAPI</span>
-                </button>
+            <div className="flex h-full w-full items-center px-2 md:px-4">
+                {/* Lado esquerdo: Logo + Botões Import/Export */}
+                <div className="flex items-center gap-2 flex-1">
+                    <button type="button" onClick={onBackToLanding} className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm font-semibold tracking-wide text-(--app-fg) hover:opacity-80 transition-opacity cursor-pointer" title="Voltar para página inicial">
+                        <span className="inline-flex size-7 md:size-8 items-center justify-center rounded-md border border-(--app-border) bg-(--app-surface-2)">
+                            <Code2 className="size-3.5 md:size-4 text-(--app-accent)" />
+                        </span>
+                        <span>ContractAPI</span>
+                    </button>
 
-                {/* Botões de Import/Export */}
-                {(onImport || onExport) && (
-                    <div className="flex items-center gap-1 ml-2">
-                        {onImport && (
-                            <>
-                                <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
-                                <button type="button" onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1 px-2 py-1 text-xs rounded-md border border-(--app-border) text-(--app-muted) hover:text-(--app-fg) hover:bg-(--app-surface-2) cursor-pointer transition-colors" title="Importar JSON">
-                                    <Upload className="size-3.5" />
-                                    <span className="hidden sm:inline">Importar</span>
+                    {/* Botões de Import/Export */}
+                    {(onImport || onExport) && (
+                        <div className="flex items-center gap-1 ml-2">
+                            {onImport && (
+                                <>
+                                    <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
+                                    <button type="button" onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1 px-2 py-1 text-xs rounded-md border border-(--app-border) text-(--app-muted) hover:text-(--app-fg) hover:bg-(--app-surface-2) cursor-pointer transition-colors" title="Importar JSON">
+                                        <Upload className="size-3.5" />
+                                        <span className="hidden sm:inline">Importar</span>
+                                    </button>
+                                </>
+                            )}
+                            {onExport && (
+                                <button type="button" onClick={handleExport} className="flex items-center gap-1 px-2 py-1 text-xs rounded-md border border-(--app-border) text-(--app-muted) hover:text-(--app-fg) hover:bg-(--app-surface-2) cursor-pointer transition-colors" title="Exportar JSON">
+                                    <Download className="size-3.5" />
+                                    <span className="hidden sm:inline">Exportar</span>
                                 </button>
-                            </>
-                        )}
-                        {onExport && (
-                            <button type="button" onClick={handleExport} className="flex items-center gap-1 px-2 py-1 text-xs rounded-md border border-(--app-border) text-(--app-muted) hover:text-(--app-fg) hover:bg-(--app-surface-2) cursor-pointer transition-colors" title="Exportar JSON">
-                                <Download className="size-3.5" />
-                                <span className="hidden sm:inline">Exportar</span>
-                            </button>
-                        )}
-                    </div>
-                )}
+                            )}
+                        </div>
+                    )}
+                </div>
 
+                {/* Lado direito: Status e Theme */}
                 <div className="flex items-center gap-2 md:gap-3 text-[10px] md:text-xs">
+                    {/* Controles de Sessão */}
+                    {sessionMode === "local" && onStartSession && (
+                        <button type="button" onClick={onStartSession} className="flex items-center gap-1 px-2 py-1 text-xs rounded-md border border-(--app-accent) bg-(--app-accent)/10 text-(--app-accent) hover:bg-(--app-accent)/20 cursor-pointer transition-colors" title="Iniciar sessão colaborativa">
+                            <Share2 className="size-3.5" />
+                            <span className="hidden sm:inline">Colaborar</span>
+                        </button>
+                    )}
+
+                    {sessionMode === "collaborative" && sessionId && (
+                        <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-(--app-accent)/10 text-(--app-accent)">
+                                <Share2 className="size-3.5" />
+                                <span className="hidden sm:inline font-mono">{sessionId}</span>
+                            </div>
+                            {getShareableLink && (
+                                <button type="button" onClick={handleCopyLink} className="flex items-center gap-1 px-2 py-1 text-xs rounded-md border border-(--app-border) text-(--app-muted) hover:text-(--app-fg) hover:bg-(--app-surface-2) cursor-pointer transition-colors" title="Copiar link da sessão">
+                                    {copied ? <Check className="size-3.5 text-green-400" /> : <Copy className="size-3.5" />}
+                                </button>
+                            )}
+                            {onLeaveSession && (
+                                <button type="button" onClick={onLeaveSession} className="flex items-center gap-1 px-2 py-1 text-xs rounded-md border border-red-500/30 text-red-400 hover:bg-red-500/10 cursor-pointer transition-colors" title="Sair da sessão">
+                                    <LogOut className="size-3.5" />
+                                </button>
+                            )}
+                        </div>
+                    )}
+
                     {/* Theme Toggle */}
                     <button type="button" onClick={toggleTheme} className="flex items-center justify-center size-8 rounded-md border border-(--app-border) text-(--app-muted) hover:text-(--app-fg) hover:bg-(--app-surface-2) cursor-pointer transition-colors" title={theme === "dark" ? "Mudar para modo claro" : "Mudar para modo escuro"}>
                         {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
                     </button>
 
-                    {clientCount !== undefined && clientCount > 0 && (
+                    {/* Mostrar contagem de clientes apenas em sessão colaborativa */}
+                    {sessionMode === "collaborative" && clientCount !== undefined && clientCount > 0 && (
                         <div className="flex items-center gap-1 md:gap-1.5 rounded-full bg-(--app-surface-2) px-1.5 md:px-2.5 py-0.5 md:py-1 text-(--app-muted)">
                             <Users className="size-3 md:size-3.5" />
                             <span className="font-medium">{clientCount}</span>
@@ -87,7 +137,8 @@ export default function Navbar({ isConnected, clientCount, onImport, onExport, o
                         </div>
                     )}
 
-                    {isConnected !== undefined && (
+                    {/* Status de conexão apenas em sessão colaborativa */}
+                    {sessionMode === "collaborative" && isConnected !== undefined && (
                         <div className={`flex items-center gap-1 md:gap-1.5 rounded-full px-1.5 md:px-2.5 py-0.5 md:py-1 ${isConnected ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>
                             <div className={`h-1 md:h-1.5 w-1 md:w-1.5 rounded-full ${isConnected ? "bg-green-400" : "bg-red-400 animate-pulse"}`}></div>
                             <span className="hidden sm:inline font-medium">{isConnected ? "Conectado" : "Desconectado"}</span>

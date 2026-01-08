@@ -6,6 +6,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { initializeDataService } from "./services/dataService.js";
 import { setupDataHandlers, sendInitialState } from "./websocket/dataHandler.js";
+import { setupSessionDataHandlers, sendSessionInitialState } from "./websocket/sessionHandler.js";
+import { joinSession, leaveSession, broadcastSessionClientCount } from "./services/sessionService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,30 +33,70 @@ function broadcast(data) {
     });
 }
 
-// Broadcast client count to all connected clients
+// Broadcast client count to all connected clients (para conexões sem sessão)
 function broadcastClientCount() {
-    const count = wss.clients.size;
-    broadcast({ type: "CLIENT_COUNT", count });
+    const count = Array.from(wss.clients).filter((c) => !c.sessionId).length;
+    wss.clients.forEach((client) => {
+        if (client.readyState === 1 && !client.sessionId) {
+            client.send(JSON.stringify({ type: "CLIENT_COUNT", count }));
+        }
+    });
+}
+
+// Extrai sessionId da URL
+function getSessionIdFromUrl(request) {
+    try {
+        const url = new URL(request.url, `http://${request.headers.host}`);
+        return url.searchParams.get("session");
+    } catch {
+        return null;
+    }
 }
 
 // WebSocket connection
-wss.on("connection", (ws) => {
-    console.log("Novo cliente conectado");
+wss.on("connection", (ws, request) => {
+    const sessionId = getSessionIdFromUrl(request);
 
-    // Envia o estado inicial
-    sendInitialState(ws);
+    if (sessionId) {
+        // Conexão de sessão colaborativa
+        console.log(`Cliente conectado à sessão: ${sessionId}`);
+        ws.sessionId = sessionId;
 
-    // Broadcast updated client count
-    broadcastClientCount();
+        // Adiciona cliente à sessão
+        joinSession(sessionId, ws);
 
-    // Configura os handlers de mensagens
-    setupDataHandlers(ws, broadcast);
+        // Envia o estado inicial da sessão
+        sendSessionInitialState(ws, sessionId);
 
-    ws.on("close", () => {
-        console.log("Cliente desconectado");
-        // Broadcast updated client count after disconnect
+        // Broadcast contagem de clientes para a sessão
+        broadcastSessionClientCount(sessionId);
+
+        // Configura os handlers de mensagens para sessão
+        setupSessionDataHandlers(ws, sessionId);
+
+        ws.on("close", () => {
+            console.log(`Cliente desconectado da sessão: ${sessionId}`);
+            leaveSession(sessionId, ws);
+            broadcastSessionClientCount(sessionId);
+        });
+    } else {
+        // Conexão sem sessão (modo legado/compatibilidade)
+        console.log("Novo cliente conectado (sem sessão)");
+
+        // Envia o estado inicial
+        sendInitialState(ws);
+
+        // Broadcast updated client count
         broadcastClientCount();
-    });
+
+        // Configura os handlers de mensagens
+        setupDataHandlers(ws, broadcast);
+
+        ws.on("close", () => {
+            console.log("Cliente desconectado (sem sessão)");
+            broadcastClientCount();
+        });
+    }
 
     ws.on("error", (error) => {
         console.error("Erro no WebSocket:", error);

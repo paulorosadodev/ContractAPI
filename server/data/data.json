@@ -1,166 +1,159 @@
 {
-  "collections": [
-    {
-      "id": "a9ce86dc-602e-46c9-8e65-e2ad17419352",
-      "name": "Sistema",
-      "children": [
+    "collections": [
         {
-          "id": "8ecdcc74-622b-49f0-aa7f-e22ad00d2615",
-          "name": "Purchases",
-          "children": []
-        },
-        {
-          "id": "536d3caa-0049-44a6-b2a4-302583c0a99a",
-          "name": "Cliente",
-          "children": []
+            "id": "a9ce86dc-602e-46c9-8e65-e2ad17419352",
+            "name": "Sistema",
+            "children": [
+                {
+                    "id": "8ecdcc74-622b-49f0-aa7f-e22ad00d2615",
+                    "name": "Purchases",
+                    "children": []
+                },
+                {
+                    "id": "536d3caa-0049-44a6-b2a4-302583c0a99a",
+                    "name": "Cliente",
+                    "children": []
+                }
+            ]
         }
-      ]
-    }
-  ],
-  "objects": [
-    {
-      "id": "86467a56-410a-44af-a3b7-c0d6a9d41f5c",
-      "name": "CreateClientPayload",
-      "collectionId": "536d3caa-0049-44a6-b2a4-302583c0a99a",
-      "fields": [
+    ],
+    "objects": [
         {
-          "id": "53fcf2c5-01f8-43d5-b42c-379c73d4aa4d",
-          "name": "nome",
-          "type": "string",
-          "required": true
+            "id": "86467a56-410a-44af-a3b7-c0d6a9d41f5c",
+            "name": "CreateClientPayload",
+            "collectionId": "536d3caa-0049-44a6-b2a4-302583c0a99a",
+            "fields": [
+                {
+                    "id": "53fcf2c5-01f8-43d5-b42c-379c73d4aa4d",
+                    "name": "nome",
+                    "type": "string",
+                    "required": true
+                },
+                {
+                    "id": "672f1d30-f96b-4fd3-92dd-986e61c71a40",
+                    "name": "dataNascimento",
+                    "type": "Date",
+                    "required": false
+                },
+                {
+                    "id": "7a785e3a-f71b-4797-9468-3337f89fabed",
+                    "name": "telefones",
+                    "type": "string[]",
+                    "required": false
+                }
+            ],
+            "kind": "interface"
         },
         {
-          "id": "672f1d30-f96b-4fd3-92dd-986e61c71a40",
-          "name": "dataNascimento",
-          "type": "Date",
-          "required": false
+            "id": "2b4be1bd-41fe-4809-81df-51db3cd3d219",
+            "name": "Purchase",
+            "collectionId": "8ecdcc74-622b-49f0-aa7f-e22ad00d2615",
+            "fields": [
+                {
+                    "id": "280084cf-c333-4755-8f45-39ae627c0ff5",
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                },
+                {
+                    "id": "c11ff7b0-6a79-4f8d-806f-6e79aea4e3b4",
+                    "name": "item",
+                    "type": "string",
+                    "required": true
+                },
+                {
+                    "id": "b03f5199-7bdb-472a-99c4-d79e644f06c8",
+                    "name": "valor",
+                    "type": "StatusPedido",
+                    "required": false
+                }
+            ],
+            "kind": "interface"
         },
         {
-          "id": "7a785e3a-f71b-4797-9468-3337f89fabed",
-          "name": "telefones",
-          "type": "string[]",
-          "required": false
+            "id": "e5a40ed7-ade3-471e-87dc-8f238f3f32fb",
+            "name": "ClientPurchasesPayload",
+            "collectionId": "536d3caa-0049-44a6-b2a4-302583c0a99a",
+            "fields": [
+                {
+                    "id": "c9cc69ad-d91f-4274-8a98-8d15cf7fda0b",
+                    "name": "clientId",
+                    "type": "string",
+                    "required": true
+                },
+                {
+                    "id": "ee6d2557-f8a8-4768-86aa-8eb75f9de76f",
+                    "name": "clientName",
+                    "type": "string",
+                    "required": true
+                },
+                {
+                    "id": "e66f3ee8-3b7e-41d3-9dbe-3f41d2b1ad43",
+                    "name": "purchases",
+                    "type": "Purchase[]",
+                    "required": false
+                }
+            ],
+            "kind": "interface"
+        },
+        {
+            "id": "624469f5-5298-49fa-ad2a-5cd182a7751f",
+            "name": "Status",
+            "collectionId": "8ecdcc74-622b-49f0-aa7f-e22ad00d2615",
+            "fields": [],
+            "kind": "enum",
+            "enumValues": ["ON_GOING", "WAITING", "CANCELLED"]
+        },
+        {
+            "id": "1ab7a04f-0879-4fc1-a883-94d0689f7fcc",
+            "name": "StatusPedido",
+            "collectionId": "",
+            "fields": [],
+            "kind": "enum",
+            "enumValues": ["AGUARDANDO_ENTREGA", "ENTREGUE"]
         }
-      ],
-      "kind": "interface"
-    },
-    {
-      "id": "2b4be1bd-41fe-4809-81df-51db3cd3d219",
-      "name": "Purchase",
-      "collectionId": "8ecdcc74-622b-49f0-aa7f-e22ad00d2615",
-      "fields": [
+    ],
+    "roles": [
         {
-          "id": "280084cf-c333-4755-8f45-39ae627c0ff5",
-          "name": "id",
-          "type": "string",
-          "required": true
+            "id": "28741cb3-5eac-41db-b2d4-9b534cd6cf26",
+            "name": "Gerente",
+            "order": 0
         },
         {
-          "id": "c11ff7b0-6a79-4f8d-806f-6e79aea4e3b4",
-          "name": "item",
-          "type": "string",
-          "required": true
+            "id": "c9c7ebb6-c259-45f1-aed8-0546a9f1a4c1",
+            "name": "Admin",
+            "order": 1
         },
         {
-          "id": "b03f5199-7bdb-472a-99c4-d79e644f06c8",
-          "name": "valor",
-          "type": "StatusPedido",
-          "required": false
+            "id": "99741e99-6a75-429a-87ed-4583481ab343",
+            "name": "Teste",
+            "order": 2
         }
-      ],
-      "kind": "interface"
-    },
-    {
-      "id": "e5a40ed7-ade3-471e-87dc-8f238f3f32fb",
-      "name": "ClientPurchasesPayload",
-      "collectionId": "536d3caa-0049-44a6-b2a4-302583c0a99a",
-      "fields": [
+    ],
+    "endpoints": [
         {
-          "id": "c9cc69ad-d91f-4274-8a98-8d15cf7fda0b",
-          "name": "clientId",
-          "type": "string",
-          "required": true
+            "id": "5a80429f-3db6-44be-9145-1d8b16c2bac7",
+            "name": "Cadastrar cliente",
+            "collectionId": "536d3caa-0049-44a6-b2a4-302583c0a99a",
+            "path": "/create-client",
+            "method": "POST",
+            "minRole": "",
+            "queryParams": [],
+            "requestBody": "{\n  \"nome\": \"string\",\n  \"dataNascimento\": {},\n  \"telefones\": []\n}",
+            "responseBody": "",
+            "description": ""
         },
         {
-          "id": "ee6d2557-f8a8-4768-86aa-8eb75f9de76f",
-          "name": "clientName",
-          "type": "string",
-          "required": true
-        },
-        {
-          "id": "e66f3ee8-3b7e-41d3-9dbe-3f41d2b1ad43",
-          "name": "purchases",
-          "type": "Purchase[]",
-          "required": false
+            "id": "85bbe82a-cc9a-4138-83c3-32993d695ac1",
+            "name": "Compras de um cliente",
+            "collectionId": "8ecdcc74-622b-49f0-aa7f-e22ad00d2615",
+            "path": "/purchases/{id}",
+            "method": "GET",
+            "minRole": "",
+            "queryParams": [],
+            "requestBody": "",
+            "responseBody": "{\n  \"clientId\": \"string\",\n  \"clientName\": \"string\",\n  \"purchases\": [\n    {\n      \"id\": \"string\",\n      \"item\": \"string\",\n      \"valor\": 0\n    }\n  ]\n}",
+            "description": ""
         }
-      ],
-      "kind": "interface"
-    },
-    {
-      "id": "624469f5-5298-49fa-ad2a-5cd182a7751f",
-      "name": "Status",
-      "collectionId": "8ecdcc74-622b-49f0-aa7f-e22ad00d2615",
-      "fields": [],
-      "kind": "enum",
-      "enumValues": [
-        "ON_GOING",
-        "WAITING",
-        "CANCELLED"
-      ]
-    },
-    {
-      "id": "1ab7a04f-0879-4fc1-a883-94d0689f7fcc",
-      "name": "StatusPedido",
-      "collectionId": "",
-      "fields": [],
-      "kind": "enum",
-      "enumValues": [
-        "AGUARDANDO_ENTREGA",
-        "ENTREGUE"
-      ]
-    }
-  ],
-  "roles": [
-    {
-      "id": "28741cb3-5eac-41db-b2d4-9b534cd6cf26",
-      "name": "Gerente",
-      "order": 0
-    },
-    {
-      "id": "c9c7ebb6-c259-45f1-aed8-0546a9f1a4c1",
-      "name": "Admin",
-      "order": 1
-    },
-    {
-      "id": "99741e99-6a75-429a-87ed-4583481ab343",
-      "name": "Teste",
-      "order": 2
-    }
-  ],
-  "endpoints": [
-    {
-      "id": "5a80429f-3db6-44be-9145-1d8b16c2bac7",
-      "name": "Cadastrar cliente",
-      "collectionId": "536d3caa-0049-44a6-b2a4-302583c0a99a",
-      "path": "/create-client",
-      "method": "POST",
-      "minRole": "",
-      "queryParams": [],
-      "requestBody": "{\n  \"nome\": \"string\",\n  \"dataNascimento\": {},\n  \"telefones\": []\n}",
-      "responseBody": "",
-      "description": ""
-    },
-    {
-      "id": "85bbe82a-cc9a-4138-83c3-32993d695ac1",
-      "name": "Compras de um cliente",
-      "collectionId": "8ecdcc74-622b-49f0-aa7f-e22ad00d2615",
-      "path": "/purchases/{id}",
-      "method": "GET",
-      "minRole": "",
-      "queryParams": [],
-      "requestBody": "",
-      "responseBody": "{\n  \"clientId\": \"string\",\n  \"clientName\": \"string\",\n  \"purchases\": [\n    {\n      \"id\": \"string\",\n      \"item\": \"string\",\n      \"valor\": 0\n    }\n  ]\n}",
-      "description": ""
-    }
-  ]
+    ]
 }
